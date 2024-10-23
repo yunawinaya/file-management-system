@@ -52,7 +52,7 @@ const handleClick = folder => {
       </div>
 
       <div v-if="folder.open" class="pl-6">
-        <DirectoryTab
+        <FolderDirectory
           :folders="folder.children"
           :selectedFolderId="props.selectedFolderId"
           :selectFolder="props.selectFolder"

@@ -1,7 +1,7 @@
 <script setup>
-import DirectoryTab from './items/DirectoryTab.vue'
+import FolderDirectory from './items/FolderDirectory.vue'
 import FormatBar from './items/FormatBar.vue'
-import NavbarComp from './items/NavbarComp.vue'
+import NavigationBar from './items/NavigationBar.vue'
 import SearchBar from './items/SearchBar.vue'
 import NewFolderModal from './items/NewFolderModal.vue'
 import { ref } from 'vue'
@@ -218,12 +218,12 @@ const closeModal = () => {
 
 <template>
   <div class="flex flex-col">
-    <NavbarComp />
+    <NavigationBar />
     <div class="border border-gray-200 rounded-md mx-10 my-8">
       <FormatBar :addNewFolder="openAddFolderModal" />
       <SearchBar />
       <div class="border-t border-gray-200 min-h-screen">
-        <DirectoryTab
+        <FolderDirectory
           :folders="folders"
           :selectedFolderId="selectedFolderId"
           :selectFolder="selectFolder"
