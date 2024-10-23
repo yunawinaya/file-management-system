@@ -162,10 +162,15 @@ const showModal = ref(false)
 const newFolderName = ref('')
 
 const selectFolder = folder => {
-  selectedFolderId.value = folder.id
+  if (selectedFolderId.value === folder.id) {
+    // If the folder is already selected, toggle its open/close state
+    folder.open = !folder.open
+  } else {
+    // If it's not selected, select it without toggling its state
+    selectedFolderId.value = folder.id
+  }
 }
 
-// Handle folder double-click to open
 const openFolder = folder => {
   folder.open = true
   selectedFolderId.value = folder.id
@@ -213,6 +218,7 @@ const createNewFolder = name => {
 }
 
 const selectedFolder = computed(() => {
+  // Function to find the selected folder
   const findFolderById = (folders, id) => {
     for (const folder of folders) {
       if (folder.id === id) return folder
