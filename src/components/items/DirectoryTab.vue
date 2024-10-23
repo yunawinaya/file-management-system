@@ -7,23 +7,25 @@ const props = defineProps({
   selectFolder: Function,
 })
 
-// Method to filter only folders (those with children)
 const folderOnly = computed(() => {
-  return props.folders.filter(folder => folder.children)
+  return props.folders.filter(folder => folder.type === 'folder')
 })
+
+const handleClick = folder => {
+  props.selectFolder(folder)
+}
 </script>
 
 <template>
   <div>
     <div v-for="folder in folderOnly" :key="folder.id">
       <div
-        class="flex items-center"
-        @click="() => props.selectFolder(folder)"
+        class="flex items-center w-full cursor-pointer p-2 border-l-4"
+        @click="handleClick(folder)"
         :class="[
-          'p-2 cursor-pointer',
           folder.id === props.selectedFolderId
-            ? 'bg-blue-200 text-blue-800'
-            : 'hover:bg-gray-200 text-gray-800',
+            ? 'border-gray-700 bg-gray-500 text-white'
+            : 'border-transparent hover:bg-gray-200 text-gray-800',
         ]"
       >
         <svg
@@ -43,13 +45,13 @@ const folderOnly = computed(() => {
         </svg>
         <img
           src="@/assets/icons/folder.svg"
-          alt="add icon"
+          alt="folder icon"
           class="h-5 w-5 ml-2"
         />
         <p class="ml-2">{{ folder.name }}</p>
       </div>
 
-      <div v-if="folder.open" class="ml-4">
+      <div v-if="folder.open" class="pl-6">
         <DirectoryTab
           :folders="folder.children"
           :selectedFolderId="props.selectedFolderId"

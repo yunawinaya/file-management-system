@@ -3,6 +3,7 @@ import DirectoryTab from './items/DirectoryTab.vue'
 import FormatBar from './items/FormatBar.vue'
 import NavbarComp from './items/NavbarComp.vue'
 import SearchBar from './items/SearchBar.vue'
+import NewFolderModal from './items/NewFolderModal.vue'
 import { ref } from 'vue'
 
 // Initial folder data
@@ -155,20 +156,28 @@ const folders = ref([
   },
 ])
 
-// Reactive state for the currently selected folder
-const selectedFolderId = ref(null)
+const selectedFolderId = ref(0)
+const showModal = ref(false)
+const newFolderName = ref('')
 
-// Method to select the folder and toggle its open/close state
 const selectFolder = folder => {
-  selectedFolderId.value = folder.id
-  folder.open = !folder.open
+  if (selectedFolderId.value === folder.id) {
+    // If the folder is already selected, toggle its open/close state
+    folder.open = !folder.open
+  } else {
+    // If it's not selected, select it without toggling its state
+    selectedFolderId.value = folder.id
+  }
 }
 
-// Method to add a new folder to the selected folder
-const addNewFolder = () => {
-  if (selectedFolderId.value === null) return
+const openAddFolderModal = () => {
+  showModal.value = true
+  newFolderName.value = ''
+}
 
-  // Find the selected folder
+const createNewFolder = name => {
+  if (selectedFolderId.value === null || !name.trim()) return
+
   const findFolderById = (folders, id) => {
     for (const folder of folders) {
       if (folder.id === id) return folder
@@ -182,25 +191,28 @@ const addNewFolder = () => {
   const selectedFolder = findFolderById(folders.value, selectedFolderId.value)
 
   if (selectedFolder && selectedFolder.type === 'folder') {
-    // Add a new folder with a unique ID and default name
-    const newFolderId = Date.now() // Unique ID based on timestamp
-    const currentDate = new Date().toISOString().split('T')[0] // Get current date in YYYY-MM-DD format
+    const newFolderId = Date.now()
+    const currentDate = new Date().toISOString().split('T')[0]
     const newFolder = {
       id: newFolderId,
-      name: `New Folder ${newFolderId}`,
+      name: name,
       type: 'folder',
       dateCreated: currentDate,
-      lastModified: currentDate, // Set lastModified to the current date
-      parentId: selectedFolder.id, // Set parentId to the ID of the selected folder
+      lastModified: currentDate,
+      parentId: selectedFolder.id,
       open: false,
       children: [],
     }
 
     selectedFolder.children.push(newFolder)
-
-    // Update the lastModified date of the parent folder to the current date
     selectedFolder.lastModified = currentDate
+
+    showModal.value = false
   }
+}
+
+const closeModal = () => {
+  showModal.value = false
 }
 </script>
 
@@ -208,7 +220,7 @@ const addNewFolder = () => {
   <div class="flex flex-col">
     <NavbarComp />
     <div class="border border-gray-200 rounded-md mx-10 my-8">
-      <FormatBar :addNewFolder="addNewFolder" />
+      <FormatBar :addNewFolder="openAddFolderModal" />
       <SearchBar />
       <div class="border-t border-gray-200 min-h-screen">
         <DirectoryTab
@@ -218,5 +230,12 @@ const addNewFolder = () => {
         />
       </div>
     </div>
+
+    <NewFolderModal
+      :showModal="showModal"
+      :newFolderName="newFolderName"
+      @close="closeModal"
+      @create="createNewFolder"
+    />
   </div>
 </template>
