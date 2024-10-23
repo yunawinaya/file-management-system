@@ -4,7 +4,8 @@ import FormatBar from './items/FormatBar.vue'
 import NavigationBar from './items/NavigationBar.vue'
 import SearchBar from './items/SearchBar.vue'
 import NewFolderModal from './items/NewFolderModal.vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import FolderContents from './items/FolderContents.vue'
 
 // Initial folder data
 const folders = ref([
@@ -161,13 +162,13 @@ const showModal = ref(false)
 const newFolderName = ref('')
 
 const selectFolder = folder => {
-  if (selectedFolderId.value === folder.id) {
-    // If the folder is already selected, toggle its open/close state
-    folder.open = !folder.open
-  } else {
-    // If it's not selected, select it without toggling its state
-    selectedFolderId.value = folder.id
-  }
+  selectedFolderId.value = folder.id
+}
+
+// Handle folder double-click to open
+const openFolder = folder => {
+  folder.open = true
+  selectedFolderId.value = folder.id
 }
 
 const openAddFolderModal = () => {
@@ -211,6 +212,20 @@ const createNewFolder = name => {
   }
 }
 
+const selectedFolder = computed(() => {
+  const findFolderById = (folders, id) => {
+    for (const folder of folders) {
+      if (folder.id === id) return folder
+      if (folder.children) {
+        const result = findFolderById(folder.children, id)
+        if (result) return result
+      }
+    }
+  }
+
+  return findFolderById(folders.value, selectedFolderId.value)
+})
+
 const closeModal = () => {
   showModal.value = false
 }
@@ -222,12 +237,21 @@ const closeModal = () => {
     <div class="border border-gray-200 rounded-md mx-10 my-8">
       <FormatBar :addNewFolder="openAddFolderModal" />
       <SearchBar />
-      <div class="border-t border-gray-200 min-h-screen">
-        <FolderDirectory
-          :folders="folders"
-          :selectedFolderId="selectedFolderId"
-          :selectFolder="selectFolder"
-        />
+      <div class="flex border-t border-gray-200 min-h-screen w-full">
+        <div class="w-1/3">
+          <FolderDirectory
+            :folders="folders"
+            :selectedFolderId="selectedFolderId"
+            :selectFolder="selectFolder"
+          />
+        </div>
+        <div class="w-2/3">
+          <FolderContents
+            v-if="selectedFolder"
+            :folder="selectedFolder"
+            @open-folder="openFolder"
+          />
+        </div>
       </div>
     </div>
 
