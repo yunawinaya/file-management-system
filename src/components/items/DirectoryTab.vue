@@ -15,12 +15,12 @@ const folderOnly = computed(() => {
 
 <template>
   <div>
-    <div v-for="folder in folderOnly" :key="folder.id" class="ml-4">
+    <div v-for="folder in folderOnly" :key="folder.id">
       <div
         class="flex items-center"
         @click="() => props.selectFolder(folder)"
         :class="[
-          'p-2 cursor-pointer rounded-md',
+          'p-2 cursor-pointer',
           folder.id === props.selectedFolderId
             ? 'bg-blue-200 text-blue-800'
             : 'hover:bg-gray-200 text-gray-800',
@@ -41,6 +41,11 @@ const folderOnly = computed(() => {
             d="M9 5l7 7-7 7"
           />
         </svg>
+        <img
+          src="@/assets/icons/folder.svg"
+          alt="add icon"
+          class="h-5 w-5 ml-2"
+        />
         <p class="ml-2">{{ folder.name }}</p>
       </div>
 

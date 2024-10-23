@@ -207,11 +207,10 @@ const addNewFolder = () => {
 <template>
   <div class="flex flex-col">
     <NavbarComp />
-    <div class="mx-10 my-8">
+    <div class="border border-gray-200 rounded-md mx-10 my-8">
       <FormatBar :addNewFolder="addNewFolder" />
       <SearchBar />
-      <div class="p-6 bg-gray-50 min-h-screen">
-        <h1 class="text-2xl font-bold mb-4">File Explorer</h1>
+      <div class="border-t border-gray-200 min-h-screen">
         <DirectoryTab
           :folders="folders"
           :selectedFolderId="selectedFolderId"

@@ -8,7 +8,7 @@ const props = defineProps({
 </script>
 
 <template>
-  <div class="flex space-x-1 items-center py-1.5 px-2 bg-gray-100 rounded-md">
+  <div class="flex space-x-1 items-center py-1.5 px-2 bg-gray-100 rounded-t-md">
     <div class="flex gap-1">
       <div
         class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
