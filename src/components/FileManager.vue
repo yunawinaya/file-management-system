@@ -163,10 +163,8 @@ const newFolderName = ref('')
 
 const selectFolder = folder => {
   if (selectedFolderId.value === folder.id) {
-    // If the folder is already selected, toggle its open/close state
     folder.open = !folder.open
   } else {
-    // If it's not selected, select it without toggling its state
     selectedFolderId.value = folder.id
   }
 }
