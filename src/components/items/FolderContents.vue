@@ -6,7 +6,6 @@ import mp3Icon from '@/assets/icons/mp3.svg'
 import mp4Icon from '@/assets/icons/mp4.svg'
 import txtIcon from '@/assets/icons/txt.svg'
 
-// Define props to accept the folder contents
 const props = defineProps({
   folder: {
     type: Object,
@@ -22,31 +21,25 @@ const props = defineProps({
   },
 })
 
-// Define emits for communicating with the parent component
 const emit = defineEmits(['open-folder', 'update-selected'])
 
 const selectedItems = ref([])
 const searchQuery = ref('')
 
-// Emit selected items from FolderContents.vue
 const emitSelectedItems = () => {
   emit('update-selected', selectedItems.value)
 }
 
-// Watch for changes in selectedItems and emit the update
 watch(() => selectedItems.value, emitSelectedItems, { deep: true })
 
-// Recursive function to search through all folders and files
 const searchAllFolders = (folders, query) => {
   let results = []
 
   folders.forEach(folder => {
-    // If folder name matches the search query, add it to results
     if (folder.name.toLowerCase().includes(query.toLowerCase())) {
       results.push(folder)
     }
 
-    // Search through the files in the folder
     if (folder.files) {
       const matchedFiles = folder.files.filter(file =>
         file.name.toLowerCase().includes(query.toLowerCase()),
@@ -54,7 +47,6 @@ const searchAllFolders = (folders, query) => {
       results = results.concat(matchedFiles)
     }
 
-    // Recursively search in child folders
     if (folder.children) {
       results = results.concat(searchAllFolders(folder.children, query))
     }

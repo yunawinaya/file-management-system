@@ -4,7 +4,6 @@ import { useToast } from './useToast'
 import DeleteModal from './DeleteModal.vue'
 import RenameModal from './RenameModal.vue'
 
-// Accept the props
 const props = defineProps({
   folders: Array,
   addNewFolder: Function,
@@ -52,7 +51,6 @@ const handleFileUpload = async event => {
 
     addToast('File uploaded successfully!', 'success', 3000)
 
-    // Update the folder with the new file
     const findFolderById = (folders, id) => {
       for (const folder of folders) {
         if (folder.id === id) return folder
@@ -81,18 +79,16 @@ const deleteSelectedItems = () => {
 
   const itemCount = props.selectedItems.length
   if (itemCount === 1) {
-    // Single item deletion message
     const itemType =
       props.selectedItems[0].type === 'folder' ? 'Folder' : 'File'
     modalMessage.value = `Are you sure you want to delete this ${itemType.toLowerCase()}?`
     modalTitle.value = itemType
   } else {
-    // Multiple items deletion message
     modalMessage.value = `Are you sure you want to delete these ${itemCount} items?`
     modalTitle.value = 'Items'
   }
 
-  showModal.value = true // Show the modal
+  showModal.value = true
 }
 
 const confirmDeletion = async () => {
@@ -115,7 +111,6 @@ const confirmDeletion = async () => {
 
       addToast(`${item.name} deleted successfully!`, 'success')
 
-      // Update UI: Remove the item from the folders array if necessary
       const findFolderById = (folders, id) => {
         for (const folder of folders) {
           if (folder.id === id) return folder
@@ -147,6 +142,43 @@ const confirmDeletion = async () => {
       console.error(error)
       addToast(`Error deleting ${item.name}. Please try again.`, 'error')
     }
+  }
+}
+
+const downloadSelectedItem = async () => {
+  if (props.selectedItems.length !== 1) {
+    addToast('Please select one item to download.', 'error', 3000)
+    return
+  }
+
+  const selectedItem = props.selectedItems[0]
+  const type = selectedItem.type === 'folder' ? 'folders' : 'files'
+  try {
+    addToast(`Downloading ${selectedItem.name}...`, 'info')
+
+    const response = await fetch(
+      `https://fms-backend-neon.vercel.app/api/${type}/${selectedItem.id}/download`,
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to download ${type}`)
+    }
+
+    const blob = await response.blob()
+    const downloadUrl = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = downloadUrl
+    link.download = selectedItem.name
+    link.click()
+
+    window.URL.revokeObjectURL(downloadUrl)
+    addToast(`${selectedItem.name} downloaded successfully!`, 'success')
+  } catch (error) {
+    console.error(error)
+    addToast(
+      `Error downloading ${selectedItem.name}. Please try again.`,
+      'error',
+    )
   }
 }
 
@@ -195,14 +227,11 @@ const confirmRename = async newNameValue => {
     const updatedItem = await response.json()
     addToast(`${updatedItem.name} renamed successfully!`, 'success')
 
-    // Update the folders array with the new name directly
     if (selectedItem.type === 'folder') {
       selectedItem.name = updatedItem.name
     } else {
       selectedItem.name = updatedItem.name
     }
-
-    // Trigger any necessary reactivity updates
   } catch (error) {
     console.error(error)
     addToast(`Error renaming ${selectedItem.name}. Please try again.`, 'error')
@@ -258,26 +287,6 @@ const cancelDeletion = () => {
 
     <div v-else class="flex flex-1 justify-between items-center">
       <div class="flex gap-1">
-        <!-- <div
-          class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
-        >
-          <img
-            src="@/assets/icons/cut.svg"
-            alt="cut icon"
-            class="h-5 w-5 brightness-50 group-hover:brightness-0 group-hover:invert"
-          />
-          <p>Cut</p>
-        </div>
-        <div
-          class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
-        >
-          <img
-            src="@/assets/icons/copy.svg"
-            alt="copy icon"
-            class="h-5 w-5 brightness-50 group-hover:brightness-0 group-hover:invert"
-          />
-          <p>Copy</p>
-        </div> -->
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
           @click="deleteSelectedItems"
@@ -291,6 +300,7 @@ const cancelDeletion = () => {
         </div>
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
+          @click="downloadSelectedItem"
         >
           <img
             src="@/assets/icons/download.svg"
