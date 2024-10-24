@@ -12,7 +12,7 @@ const folders = ref([])
 onMounted(async () => {
   try {
     const response = await fetch(
-      'https://fms-backend-e1cs6nlkf-yunawinayas-projects.vercel.app/api/folders',
+      'https://fms-backend-blush.vercel.app/api/folders',
     )
     folders.value = await response.json()
     console.log(folders)
