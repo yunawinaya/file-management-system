@@ -8,7 +8,6 @@ dotenv.config()
 const app = express()
 const port = process.env.PORT || 3000
 
-// Set up PostgreSQL connection
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
@@ -18,9 +17,9 @@ const pool = new Pool({
 
 app.use(
   cors({
-    origin: 'http://localhost:8080', // Allow requests from this domain
-    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allow these HTTP methods
-    credentials: true, // Allow cookies if needed
+    origin: 'http://localhost:8080',
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    credentials: true,
   }),
 )
 
