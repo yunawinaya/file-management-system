@@ -1,8 +1,9 @@
 <script setup>
-import { defineProps } from 'vue'
+import { defineProps, ref, computed } from 'vue'
 import { useToast } from './useToast'
+import DeleteModal from './DeleteModal.vue'
 
-// Accept the prop
+// Accept the props
 const props = defineProps({
   folders: Array,
   addNewFolder: Function,
@@ -11,6 +12,13 @@ const props = defineProps({
 })
 
 const { addToast } = useToast()
+
+const showModal = ref(false)
+const modalMessage = ref('')
+const modalTitle = ref('')
+
+const isItemSelected = computed(() => props.selectedItems.length > 0)
+const selectedItemCount = computed(() => props.selectedItems.length)
 
 const handleFileUpload = async event => {
   const file = event.target.files[0]
@@ -61,11 +69,30 @@ const handleFileUpload = async event => {
   }
 }
 
-const deleteSelectedItems = async () => {
+const deleteSelectedItems = () => {
   if (props.selectedItems.length === 0) {
     addToast('No items selected for deletion.', 'info', 3000)
     return
   }
+
+  const itemCount = props.selectedItems.length
+  if (itemCount === 1) {
+    // Single item deletion message
+    const itemType =
+      props.selectedItems[0].type === 'folder' ? 'Folder' : 'File'
+    modalMessage.value = `Are you sure you want to delete this ${itemType.toLowerCase()}?`
+    modalTitle.value = itemType
+  } else {
+    // Multiple items deletion message
+    modalMessage.value = `Are you sure you want to delete these ${itemCount} items?`
+    modalTitle.value = 'Items'
+  }
+
+  showModal.value = true // Show the modal
+}
+
+const confirmDeletion = async () => {
+  showModal.value = false
 
   for (const item of props.selectedItems) {
     const type = item.type === 'folder' ? 'folders' : 'files'
@@ -118,11 +145,15 @@ const deleteSelectedItems = async () => {
     }
   }
 }
+
+const cancelDeletion = () => {
+  showModal.value = false
+}
 </script>
 
 <template>
   <div class="flex space-x-1 items-center py-1.5 px-2 bg-gray-100 rounded-t-md">
-    <div class="flex gap-1">
+    <div v-if="!isItemSelected" class="flex gap-1">
       <div
         class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
         @click="props.addNewFolder"
@@ -157,7 +188,8 @@ const deleteSelectedItems = async () => {
         </label>
       </div>
     </div>
-    <div class="flex flex-1 justify-between">
+
+    <div v-else class="flex flex-1 justify-between items-center">
       <div class="flex gap-1">
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
@@ -211,18 +243,17 @@ const deleteSelectedItems = async () => {
           <p>Rename</p>
         </div>
       </div>
-      <div class="flex px-2">
-        <div
-          class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
-        >
-          <p>selected</p>
-          <img
-            src="@/assets/icons/close.svg"
-            alt="rename icon"
-            class="h-5 w-5 brightness-0 group-hover:brightness-0 group-hover:invert"
-          />
-        </div>
+      <div class="text-sm text-gray-600 p-2">
+        {{ selectedItemCount }} item(s) selected
       </div>
     </div>
+
+    <DeleteModal
+      :visible="showModal"
+      :title="modalTitle"
+      :message="modalMessage"
+      @confirm="confirmDeletion"
+      @cancel="cancelDeletion"
+    />
   </div>
 </template>
