@@ -2,7 +2,6 @@
 import FolderDirectory from './items/FolderDirectory.vue'
 import FormatBar from './items/FormatBar.vue'
 import NavigationBar from './items/NavigationBar.vue'
-import SearchBar from './items/SearchBar.vue'
 import NewFolderModal from './items/NewFolderModal.vue'
 import { computed, onMounted, ref } from 'vue'
 import FolderContents from './items/FolderContents.vue'
@@ -55,6 +54,30 @@ const openFolder = folder => {
   selectedFolderId.value = folder.id
 }
 
+// Helper function to find a folder by ID
+const findFolderById = (folders, id) => {
+  for (const folder of folders) {
+    if (folder.id === id) return folder
+    if (folder.children) {
+      const result = findFolderById(folder.children, id)
+      if (result) return result
+    }
+  }
+}
+
+// Compute the full path from the root folder to the selected folder
+const folderPath = computed(() => {
+  const path = []
+  let currentFolder = findFolderById(folders.value, selectedFolderId.value)
+
+  while (currentFolder) {
+    path.unshift(currentFolder)
+    currentFolder = findFolderById(folders.value, currentFolder.parent_id)
+  }
+
+  return path
+})
+
 const openAddFolderModal = () => {
   showModal.value = true
   newFolderName.value = ''
@@ -84,17 +107,6 @@ const createNewFolder = async name => {
 
     const newFolder = await response.json()
 
-    // Find the selected folder to add the new folder as a child
-    const findFolderById = (folders, id) => {
-      for (const folder of folders) {
-        if (folder.id === id) return folder
-        if (folder.children) {
-          const result = findFolderById(folder.children, id)
-          if (result) return result
-        }
-      }
-    }
-
     const selectedFolder = findFolderById(folders.value, selectedFolderId.value)
 
     if (selectedFolder) {
@@ -111,16 +123,6 @@ const createNewFolder = async name => {
 }
 
 const selectedFolder = computed(() => {
-  const findFolderById = (folders, id) => {
-    for (const folder of folders) {
-      if (folder.id === id) return folder
-      if (folder.children) {
-        const result = findFolderById(folder.children, id)
-        if (result) return result
-      }
-    }
-  }
-
   return findFolderById(folders.value, selectedFolderId.value)
 })
 
@@ -139,7 +141,6 @@ const closeModal = () => {
         :folders="folders"
         :selectedItems="selectedItems"
       />
-      <SearchBar />
       <div class="flex border-t border-gray-200 min-h-screen w-full">
         <div class="w-1/3">
           <FolderDirectory
@@ -152,6 +153,8 @@ const closeModal = () => {
           <FolderContents
             v-if="selectedFolder"
             :folder="selectedFolder"
+            :folderPath="folderPath"
+            :allFolders="folders"
             @open-folder="openFolder"
             @update-selected="updateSelectedItems"
           />

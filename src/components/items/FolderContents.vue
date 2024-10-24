@@ -8,25 +8,69 @@ import txtIcon from '@/assets/icons/txt.svg'
 
 // Define props to accept the folder contents
 const props = defineProps({
-  folder: Object,
+  folder: {
+    type: Object,
+    required: true,
+  },
+  folderPath: {
+    type: Array,
+    required: true,
+  },
+  allFolders: {
+    type: Array,
+    required: true,
+  },
 })
 
 // Define emits for communicating with the parent component
 const emit = defineEmits(['open-folder', 'update-selected'])
 
 const selectedItems = ref([])
+const searchQuery = ref('')
 
 // Emit selected items from FolderContents.vue
 const emitSelectedItems = () => {
   emit('update-selected', selectedItems.value)
-  console.log('Selected items:', selectedItems.value) // Log selected items
 }
 
 // Watch for changes in selectedItems and emit the update
 watch(() => selectedItems.value, emitSelectedItems, { deep: true })
 
+// Recursive function to search through all folders and files
+const searchAllFolders = (folders, query) => {
+  let results = []
+
+  folders.forEach(folder => {
+    // If folder name matches the search query, add it to results
+    if (folder.name.toLowerCase().includes(query.toLowerCase())) {
+      results.push(folder)
+    }
+
+    // Search through the files in the folder
+    if (folder.files) {
+      const matchedFiles = folder.files.filter(file =>
+        file.name.toLowerCase().includes(query.toLowerCase()),
+      )
+      results = results.concat(matchedFiles)
+    }
+
+    // Recursively search in child folders
+    if (folder.children) {
+      results = results.concat(searchAllFolders(folder.children, query))
+    }
+  })
+
+  return results
+}
+
 const folderContents = computed(() => {
-  return [...(props.folder.children || []), ...(props.folder.files || [])]
+  if (searchQuery.value) {
+    // Search through the entire directory when there's a search query
+    return searchAllFolders(props.allFolders, searchQuery.value)
+  } else {
+    // Default to showing the contents of the currently opened folder
+    return [...(props.folder.children || []), ...(props.folder.files || [])]
+  }
 })
 
 watch(
@@ -116,10 +160,42 @@ const areAllSelected = computed(() => {
     selectedItems.value.length === folderContents.value.length
   )
 })
+
+const navigateToFolder = folder => {
+  emit('open-folder', folder)
+}
 </script>
 
 <template>
   <div class="border-l border-gray-200 min-h-full">
+    <div
+      class="p-3 bg-gray-50 flex justify-between items-center border-b border-gray-300"
+    >
+      <nav class="flex items-center text-sm text-gray-600">
+        <span
+          v-for="(folder, index) in folderPath"
+          :key="folder.id"
+          class="flex items-center"
+        >
+          <span
+            class="cursor-pointer hover:text-blue-600 transition-colors duration-200"
+            @click="navigateToFolder(folder)"
+          >
+            {{ folder.name }}
+          </span>
+          <span v-if="index < folderPath.length - 1" class="mx-2 text-gray-400"
+            >/</span
+          >
+        </span>
+      </nav>
+      <input
+        v-model="searchQuery"
+        type="text"
+        placeholder="Search..."
+        class="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent"
+      />
+    </div>
+
     <table class="w-full table-auto border-collapse">
       <thead>
         <tr class="bg-gray-100">

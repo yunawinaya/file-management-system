@@ -258,7 +258,7 @@ const cancelDeletion = () => {
 
     <div v-else class="flex flex-1 justify-between items-center">
       <div class="flex gap-1">
-        <div
+        <!-- <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
         >
           <img
@@ -277,7 +277,7 @@ const cancelDeletion = () => {
             class="h-5 w-5 brightness-50 group-hover:brightness-0 group-hover:invert"
           />
           <p>Copy</p>
-        </div>
+        </div> -->
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
           @click="deleteSelectedItems"
