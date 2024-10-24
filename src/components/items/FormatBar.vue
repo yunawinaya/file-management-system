@@ -1,5 +1,6 @@
 <script setup>
 import { defineProps } from 'vue'
+import { useToast } from './useToast'
 
 // Accept the prop
 const props = defineProps({
@@ -8,6 +9,8 @@ const props = defineProps({
   selectedFolderId: Number,
 })
 
+const { addToast } = useToast()
+
 const handleFileUpload = async event => {
   const file = event.target.files[0]
   if (!file) return
@@ -15,6 +18,8 @@ const handleFileUpload = async event => {
   const formData = new FormData()
   formData.append('file', file)
   formData.append('folder_id', props.selectedFolderId)
+
+  addToast('Uploading file...', 'info', 3000)
 
   try {
     const response = await fetch(
@@ -32,7 +37,9 @@ const handleFileUpload = async event => {
     const newFile = await response.json()
     console.log('File uploaded successfully:', newFile)
 
-    // Find the selected folder to add the new file as a child
+    addToast('File uploaded successfully!', 'success', 3000)
+
+    // Update the folder with the new file
     const findFolderById = (folders, id) => {
       for (const folder of folders) {
         if (folder.id === id) return folder
@@ -43,14 +50,13 @@ const handleFileUpload = async event => {
       }
     }
 
-    // Get the folder where the file was uploaded
     const targetFolder = findFolderById(props.folders, props.selectedFolderId)
     if (targetFolder) {
-      // Add the new file to the folder's files array
       targetFolder.files.push(newFile)
     }
   } catch (error) {
     console.error('Error uploading file:', error)
+    addToast('Error uploading file. Please try again.', 'error', 3000)
   }
 }
 </script>
