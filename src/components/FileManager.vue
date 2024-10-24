@@ -54,7 +54,6 @@ const openFolder = folder => {
   selectedFolderId.value = folder.id
 }
 
-// Helper function to find a folder by ID
 const findFolderById = (folders, id) => {
   for (const folder of folders) {
     if (folder.id === id) return folder
@@ -65,7 +64,6 @@ const findFolderById = (folders, id) => {
   }
 }
 
-// Compute the full path from the root folder to the selected folder
 const folderPath = computed(() => {
   const path = []
   let currentFolder = findFolderById(folders.value, selectedFolderId.value)

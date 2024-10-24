@@ -1,7 +1,6 @@
 <script setup>
 import { defineProps, defineEmits, ref, watch } from 'vue'
 
-// Accept props
 const props = defineProps({
   visible: Boolean,
   title: {
@@ -14,12 +13,10 @@ const props = defineProps({
   },
 })
 
-// Create a local state for the input value
 const localName = ref(props.name)
 
 const emit = defineEmits(['confirm', 'cancel'])
 
-// Watch for changes in the prop and update the local state
 watch(
   () => props.name,
   newValue => {

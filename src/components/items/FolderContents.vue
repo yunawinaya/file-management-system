@@ -57,10 +57,8 @@ const searchAllFolders = (folders, query) => {
 
 const folderContents = computed(() => {
   if (searchQuery.value) {
-    // Search through the entire directory when there's a search query
     return searchAllFolders(props.allFolders, searchQuery.value)
   } else {
-    // Default to showing the contents of the currently opened folder
     return [...(props.folder.children || []), ...(props.folder.files || [])]
   }
 })
@@ -68,7 +66,7 @@ const folderContents = computed(() => {
 watch(
   () => props.folder,
   () => {
-    selectedItems.value = [] // Reset selected items when folder changes
+    selectedItems.value = []
   },
 )
 

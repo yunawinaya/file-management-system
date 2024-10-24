@@ -9,8 +9,8 @@ import { ref, onMounted } from 'vue'
 
 const props = defineProps({
   message: String,
-  type: String, // 'info', 'success', 'error'
-  duration: Number, // Duration in milliseconds
+  type: String,
+  duration: Number,
 })
 
 const visible = ref(false)

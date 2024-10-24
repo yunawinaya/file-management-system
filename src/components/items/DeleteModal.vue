@@ -1,7 +1,6 @@
 <script setup>
 import { defineProps, defineEmits } from 'vue'
 
-// Destructure props directly
 const { visible, message } = defineProps({
   visible: Boolean,
   title: {

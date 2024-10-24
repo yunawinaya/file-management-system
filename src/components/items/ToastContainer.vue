@@ -12,7 +12,7 @@
 
 <script setup>
 import { useToast } from './useToast'
-import Toast from './ToastPopup.vue' // Import your Toast component
+import Toast from './ToastPopup.vue'
 
 const { toasts } = useToast()
 </script>
