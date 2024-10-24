@@ -1,14 +1,10 @@
 <script setup>
-import { defineProps, computed } from 'vue'
+import { defineProps } from 'vue'
 
 const props = defineProps({
   folders: Array,
   selectedFolderId: Number,
   selectFolder: Function,
-})
-
-const folderOnly = computed(() => {
-  return props.folders.filter(folder => folder.type === 'folder')
 })
 
 const handleClick = folder => {
@@ -18,7 +14,7 @@ const handleClick = folder => {
 
 <template>
   <div>
-    <div v-for="folder in folderOnly" :key="folder.id">
+    <div v-for="folder in folders" :key="folder.id">
       <div
         class="flex items-center w-full cursor-pointer p-2 border-l-4"
         @click="handleClick(folder)"
@@ -29,7 +25,7 @@ const handleClick = folder => {
         ]"
       >
         <svg
-          v-if="folder.children && folder.children.length"
+          v-if="folder.children && folder.children.length > 0"
           :class="{ 'transform rotate-90': folder.open }"
           class="h-4 w-4 transition-transform"
           fill="none"
@@ -51,7 +47,10 @@ const handleClick = folder => {
         <p class="ml-2">{{ folder.name }}</p>
       </div>
 
-      <div v-if="folder.open" class="pl-6">
+      <div
+        v-if="folder.open && folder.children && folder.children.length"
+        class="pl-6"
+      >
         <FolderDirectory
           :folders="folder.children"
           :selectedFolderId="props.selectedFolderId"

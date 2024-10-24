@@ -16,17 +16,4 @@ export default [
   js.configs.recommended,
   ...pluginVue.configs['flat/essential'],
   skipFormatting,
-
-  {
-    languageOptions: {
-      ecmaVersion: 'latest',
-      sourceType: 'module',
-    },
-    rules: {},
-    env: {
-      node: true,
-      browser: true,
-      es2021: true,
-    },
-  },
 ]
