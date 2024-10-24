@@ -130,6 +130,7 @@ const closeModal = () => {
       <FormatBar
         :addNewFolder="openAddFolderModal"
         :selectedFolderId="selectedFolderId"
+        :folders="folders"
       />
       <SearchBar />
       <div class="flex border-t border-gray-200 min-h-screen w-full">

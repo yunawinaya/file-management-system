@@ -3,6 +3,7 @@ import { defineProps } from 'vue'
 
 // Accept the prop
 const props = defineProps({
+  folders: Array,
   addNewFolder: Function,
   selectedFolderId: Number,
 })
@@ -30,7 +31,24 @@ const handleFileUpload = async event => {
 
     const newFile = await response.json()
     console.log('File uploaded successfully:', newFile)
-    // Handle UI updates or re-fetch folders/files if needed
+
+    // Find the selected folder to add the new file as a child
+    const findFolderById = (folders, id) => {
+      for (const folder of folders) {
+        if (folder.id === id) return folder
+        if (folder.children) {
+          const result = findFolderById(folder.children, id)
+          if (result) return result
+        }
+      }
+    }
+
+    // Get the folder where the file was uploaded
+    const targetFolder = findFolderById(props.folders, props.selectedFolderId)
+    if (targetFolder) {
+      // Add the new file to the folder's files array
+      targetFolder.files.push(newFile)
+    }
   } catch (error) {
     console.error('Error uploading file:', error)
   }
