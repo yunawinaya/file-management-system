@@ -7,6 +7,7 @@ const props = defineProps({
   folders: Array,
   addNewFolder: Function,
   selectedFolderId: Number,
+  selectedItems: Array,
 })
 
 const { addToast } = useToast()
@@ -57,6 +58,64 @@ const handleFileUpload = async event => {
   } catch (error) {
     console.error('Error uploading file:', error)
     addToast('Error uploading file. Please try again.', 'error', 3000)
+  }
+}
+
+const deleteSelectedItems = async () => {
+  if (props.selectedItems.length === 0) {
+    addToast('No items selected for deletion.', 'info', 3000)
+    return
+  }
+
+  for (const item of props.selectedItems) {
+    const type = item.type === 'folder' ? 'folders' : 'files'
+    try {
+      addToast(`Deleting ${item.name}...`, 'info')
+      const response = await fetch(
+        `https://fms-backend-neon.vercel.app/api/${type}/${item.id}`,
+        {
+          method: 'DELETE',
+        },
+      )
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete ${type}`)
+      }
+
+      addToast(`${item.name} deleted successfully!`, 'success')
+
+      // Update UI: Remove the item from the folders array if necessary
+      const findFolderById = (folders, id) => {
+        for (const folder of folders) {
+          if (folder.id === id) return folder
+          if (folder.children) {
+            const result = findFolderById(folder.children, id)
+            if (result) return result
+          }
+        }
+      }
+
+      if (item.type === 'folder') {
+        const parentFolder = findFolderById(props.folders, item.parent_id)
+        if (parentFolder) {
+          const index = parentFolder.children.findIndex(f => f.id === item.id)
+          if (index !== -1) {
+            parentFolder.children.splice(index, 1)
+          }
+        }
+      } else {
+        const folder = findFolderById(props.folders, item.folder_id)
+        if (folder) {
+          const index = folder.files.findIndex(f => f.id === item.id)
+          if (index !== -1) {
+            folder.files.splice(index, 1)
+          }
+        }
+      }
+    } catch (error) {
+      console.error(error)
+      addToast(`Error deleting ${item.name}. Please try again.`, 'error')
+    }
   }
 }
 </script>
@@ -122,6 +181,7 @@ const handleFileUpload = async event => {
         </div>
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
+          @click="deleteSelectedItems"
         >
           <img
             src="@/assets/icons/delete.svg"

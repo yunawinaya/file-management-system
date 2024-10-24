@@ -35,6 +35,12 @@ const selectedFolderId = ref(0)
 const showModal = ref(false)
 const newFolderName = ref('')
 
+const selectedItems = ref([])
+
+const updateSelectedItems = items => {
+  selectedItems.value = items
+}
+
 const selectFolder = folder => {
   if (selectedFolderId.value === folder.id) {
     folder.open = !folder.open
@@ -131,6 +137,7 @@ const closeModal = () => {
         :addNewFolder="openAddFolderModal"
         :selectedFolderId="selectedFolderId"
         :folders="folders"
+        :selectedItems="selectedItems"
       />
       <SearchBar />
       <div class="flex border-t border-gray-200 min-h-screen w-full">
@@ -146,6 +153,7 @@ const closeModal = () => {
             v-if="selectedFolder"
             :folder="selectedFolder"
             @open-folder="openFolder"
+            @update-selected="updateSelectedItems"
           />
         </div>
       </div>

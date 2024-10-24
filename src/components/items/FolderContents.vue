@@ -12,9 +12,18 @@ const props = defineProps({
 })
 
 // Define emits for communicating with the parent component
-const emit = defineEmits(['open-folder'])
+const emit = defineEmits(['open-folder', 'update-selected'])
 
-const selectedItems = ref(new Set())
+const selectedItems = ref([])
+
+// Emit selected items from FolderContents.vue
+const emitSelectedItems = () => {
+  emit('update-selected', selectedItems.value)
+  console.log('Selected items:', selectedItems.value) // Log selected items
+}
+
+// Watch for changes in selectedItems and emit the update
+watch(() => selectedItems.value, emitSelectedItems, { deep: true })
 
 const folderContents = computed(() => {
   return [...(props.folder.children || []), ...(props.folder.files || [])]
@@ -23,13 +32,11 @@ const folderContents = computed(() => {
 watch(
   () => props.folder,
   () => {
-    selectedItems.value.clear()
+    selectedItems.value = [] // Reset selected items when folder changes
   },
 )
 
-// Utility function to get the icon based on the file type
 const getFileIcon = fileType => {
-  // Remove dot if present
   const cleanedFileType = fileType?.replace('.', '')
 
   switch (cleanedFileType) {
@@ -50,7 +57,6 @@ const getFileIcon = fileType => {
   }
 }
 
-// Utility function to format file sizes
 const formatSize = size => {
   if (size === undefined) return ''
   const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -72,40 +78,42 @@ const toggleSelectItem = (item, event = null) => {
     event.stopPropagation()
   }
 
-  if (selectedItems.value.has(item.id)) {
-    selectedItems.value.delete(item.id)
+  const index = selectedItems.value.findIndex(
+    selectedItem => selectedItem.id === item.id,
+  )
+  if (index !== -1) {
+    selectedItems.value = [
+      ...selectedItems.value.slice(0, index),
+      ...selectedItems.value.slice(index + 1),
+    ]
   } else {
-    selectedItems.value.add(item.id)
+    selectedItems.value = [...selectedItems.value, item]
   }
 }
 
-// Function to handle row click and select the item
 const handleRowClick = (item, event) => {
   event.stopPropagation()
   toggleSelectItem(item, event)
 }
 
-// Function to handle row double-click to open a folder
 const handleDoubleClick = item => {
   if (item.type === 'folder') {
-    emit('open-folder', item) // Emit the event to open the folder
+    emit('open-folder', item)
   }
 }
 
-// Function to handle selecting or deselecting all items
 const toggleSelectAll = () => {
-  if (selectedItems.value.size === folderContents.value.length) {
-    selectedItems.value.clear()
+  if (selectedItems.value.length === folderContents.value.length) {
+    selectedItems.value = []
   } else {
-    folderContents.value.forEach(item => selectedItems.value.add(item.id))
+    selectedItems.value = [...folderContents.value]
   }
 }
 
-// Computed property to check if all items are selected
 const areAllSelected = computed(() => {
   return (
     folderContents.value.length > 0 &&
-    selectedItems.value.size === folderContents.value.length
+    selectedItems.value.length === folderContents.value.length
   )
 })
 </script>
@@ -140,7 +148,9 @@ const areAllSelected = computed(() => {
           :key="item.id"
           class="border-t hover:bg-blue-50 cursor-pointer"
           :class="{
-            'bg-blue-50': selectedItems.has(item.id),
+            'bg-blue-50': selectedItems.some(
+              selectedItem => selectedItem.id === item.id,
+            ),
           }"
           @click="event => handleRowClick(item, event)"
           @dblclick="handleDoubleClick(item)"
@@ -148,7 +158,9 @@ const areAllSelected = computed(() => {
           <td class="p-2" @click.stop>
             <input
               type="checkbox"
-              :checked="selectedItems.has(item.id)"
+              :checked="
+                selectedItems.some(selectedItem => selectedItem.id === item.id)
+              "
               @change.stop="event => toggleSelectItem(item, event)"
             />
           </td>
