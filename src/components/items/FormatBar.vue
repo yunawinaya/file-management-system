@@ -2,6 +2,7 @@
 import { defineProps, ref, computed } from 'vue'
 import { useToast } from './useToast'
 import DeleteModal from './DeleteModal.vue'
+import RenameModal from './RenameModal.vue'
 
 // Accept the props
 const props = defineProps({
@@ -14,8 +15,11 @@ const props = defineProps({
 const { addToast } = useToast()
 
 const showModal = ref(false)
+const showRenameModal = ref(false)
 const modalMessage = ref('')
 const modalTitle = ref('')
+const renameTitle = ref('')
+const newName = ref('')
 
 const isItemSelected = computed(() => props.selectedItems.length > 0)
 const selectedItemCount = computed(() => props.selectedItems.length)
@@ -146,6 +150,69 @@ const confirmDeletion = async () => {
   }
 }
 
+const renameSelectedItem = () => {
+  if (props.selectedItems.length !== 1) {
+    addToast('Please select only one item to rename.', 'error', 3000)
+    return
+  }
+
+  const selectedItem = props.selectedItems[0]
+  const itemType = selectedItem.type === 'folder' ? 'Folder' : 'File'
+  renameTitle.value = itemType
+  newName.value = selectedItem.name
+  showRenameModal.value = true
+}
+
+const confirmRename = async newNameValue => {
+  if (!newNameValue.trim()) {
+    addToast('Name cannot be empty.', 'error', 3000)
+    return
+  }
+
+  showRenameModal.value = false
+
+  const selectedItem = props.selectedItems[0]
+  const type = selectedItem.type === 'folder' ? 'folders' : 'files'
+
+  try {
+    addToast(`Renaming ${selectedItem.name}...`, 'info')
+
+    const response = await fetch(
+      `https://fms-backend-neon.vercel.app/api/${type}/${selectedItem.id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name: newNameValue.trim() }),
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error(`Failed to rename ${type}`)
+    }
+
+    const updatedItem = await response.json()
+    addToast(`${updatedItem.name} renamed successfully!`, 'success')
+
+    // Update the folders array with the new name directly
+    if (selectedItem.type === 'folder') {
+      selectedItem.name = updatedItem.name
+    } else {
+      selectedItem.name = updatedItem.name
+    }
+
+    // Trigger any necessary reactivity updates
+  } catch (error) {
+    console.error(error)
+    addToast(`Error renaming ${selectedItem.name}. Please try again.`, 'error')
+  }
+}
+
+const cancelRename = () => {
+  showRenameModal.value = false
+}
+
 const cancelDeletion = () => {
   showModal.value = false
 }
@@ -234,6 +301,7 @@ const cancelDeletion = () => {
         </div>
         <div
           class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
+          @click="renameSelectedItem"
         >
           <img
             src="@/assets/icons/rename.svg"
@@ -254,6 +322,14 @@ const cancelDeletion = () => {
       :message="modalMessage"
       @confirm="confirmDeletion"
       @cancel="cancelDeletion"
+    />
+    <RenameModal
+      :visible="showRenameModal"
+      :title="renameTitle"
+      :name="newName"
+      @update:name="value => (newName.value = value)"
+      @confirm="confirmRename"
+      @cancel="cancelRename"
     />
   </div>
 </template>
