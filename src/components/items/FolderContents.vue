@@ -14,25 +14,25 @@ const props = defineProps({
 // Define emits for communicating with the parent component
 const emit = defineEmits(['open-folder'])
 
-// Reactive state for selected items
 const selectedItems = ref(new Set())
 
-// Computed property to get both files and folders in the current folder
 const folderContents = computed(() => {
-  return props.folder ? props.folder.children : []
+  return [...(props.folder.children || []), ...(props.folder.files || [])]
 })
 
-// Watch for changes in the folder prop to reset selected items when switching folders
 watch(
   () => props.folder,
   () => {
-    selectedItems.value.clear() // Clear selected items when the folder changes
+    selectedItems.value.clear()
   },
 )
 
 // Utility function to get the icon based on the file type
 const getFileIcon = fileType => {
-  switch (fileType) {
+  // Remove dot if present
+  const cleanedFileType = fileType?.replace('.', '')
+
+  switch (cleanedFileType) {
     case 'jpg':
     case 'png':
       return pngIcon
@@ -46,7 +46,7 @@ const getFileIcon = fileType => {
     case 'txt':
       return txtIcon
     default:
-      return '@/assets/icons/default.svg'
+      return new URL('@/assets/icons/default.svg', import.meta.url).href
   }
 }
 
@@ -62,9 +62,16 @@ const formatSize = size => {
   return `${size.toFixed(2)} ${units[unitIndex]}`
 }
 
-// Function to handle item selection
-const toggleSelectItem = (item, event) => {
-  event.stopPropagation() // Prevent click event from propagating to parent
+const formatDate = dateStr => {
+  const date = new Date(dateStr)
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+}
+
+const toggleSelectItem = (item, event = null) => {
+  if (event) {
+    event.stopPropagation()
+  }
+
   if (selectedItems.value.has(item.id)) {
     selectedItems.value.delete(item.id)
   } else {
@@ -88,10 +95,8 @@ const handleDoubleClick = item => {
 // Function to handle selecting or deselecting all items
 const toggleSelectAll = () => {
   if (selectedItems.value.size === folderContents.value.length) {
-    // If all items are selected, deselect all
     selectedItems.value.clear()
   } else {
-    // Otherwise, select all items
     folderContents.value.forEach(item => selectedItems.value.add(item.id))
   }
 }
@@ -133,9 +138,9 @@ const areAllSelected = computed(() => {
         <tr
           v-for="item in folderContents"
           :key="item.id"
-          class="border-t hover:bg-gray-50 cursor-pointer"
+          class="border-t hover:bg-blue-50 cursor-pointer"
           :class="{
-            'bg-blue-100 hover:bg-blue-100': selectedItems.has(item.id),
+            'bg-blue-50': selectedItems.has(item.id),
           }"
           @click="event => handleRowClick(item, event)"
           @dblclick="handleDoubleClick(item)"
@@ -144,7 +149,7 @@ const areAllSelected = computed(() => {
             <input
               type="checkbox"
               :checked="selectedItems.has(item.id)"
-              @change.stop="() => toggleSelectItem(item)"
+              @change.stop="event => toggleSelectItem(item, event)"
             />
           </td>
           <td class="p-2">
@@ -156,15 +161,15 @@ const areAllSelected = computed(() => {
             />
             <img
               v-else
-              :src="getFileIcon(item.name.split('.').pop())"
+              :src="getFileIcon(item.file_type)"
               alt="file icon"
               class="h-5 w-5"
             />
           </td>
           <td class="p-2 text-sm">{{ item.name }}</td>
-          <td class="p-2 text-sm">{{ item.lastModified }}</td>
+          <td class="p-2 text-sm">{{ formatDate(item.last_modified) }}</td>
           <td class="p-2 text-sm">
-            {{ item.type === 'file' ? formatSize(item.size) : '-' }}
+            {{ item.size ? formatSize(item.size) : '-' }}
           </td>
         </tr>
       </tbody>

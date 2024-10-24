@@ -4,7 +4,37 @@ import { defineProps } from 'vue'
 // Accept the prop
 const props = defineProps({
   addNewFolder: Function,
+  selectedFolderId: Number,
 })
+
+const handleFileUpload = async event => {
+  const file = event.target.files[0]
+  if (!file) return
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('folder_id', props.selectedFolderId)
+
+  try {
+    const response = await fetch(
+      'https://fms-backend-neon.vercel.app/api/files',
+      {
+        method: 'POST',
+        body: formData,
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('File upload failed')
+    }
+
+    const newFile = await response.json()
+    console.log('File uploaded successfully:', newFile)
+    // Handle UI updates or re-fetch folders/files if needed
+  } catch (error) {
+    console.error('Error uploading file:', error)
+  }
+}
 </script>
 
 <template>
@@ -25,12 +55,23 @@ const props = defineProps({
       <div
         class="flex items-center space-x-1 cursor-pointer hover:bg-gray-500 p-2 rounded-md text-gray-600 text-sm hover:text-white group"
       >
-        <img
-          src="@/assets/icons/upload.svg"
-          alt="upload icon"
-          class="h-5 w-5 brightness-50 group-hover:brightness-0 group-hover:invert"
+        <input
+          type="file"
+          id="file-upload"
+          class="hidden"
+          @change="handleFileUpload"
         />
-        <p>Upload</p>
+        <label
+          for="file-upload"
+          class="flex items-center space-x-1 cursor-pointer"
+        >
+          <img
+            src="@/assets/icons/upload.svg"
+            alt="upload icon"
+            class="h-5 w-5 brightness-50 group-hover:brightness-0 group-hover:invert"
+          />
+          <p>Upload</p>
+        </label>
       </div>
     </div>
     <div class="flex flex-1 justify-between">

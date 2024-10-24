@@ -16,33 +16,20 @@ onMounted(async () => {
     )
     const data = await response.json()
     console.log('Fetched Data:', data)
-    folders.value = transformData(data) // Assign the fetched data directly
+
+    folders.value = data
+
+    const rootFolder = folders.value.find(
+      folder => folder.name === 'Files' && folder.parent_id === null,
+    )
+    if (rootFolder) {
+      rootFolder.open = true
+      selectedFolderId.value = rootFolder.id
+    }
   } catch (error) {
     console.error('Error fetching folders:', error)
   }
 })
-
-const transformData = flatFolders => {
-  const folderMap = new Map()
-  flatFolders.forEach(folder => {
-    folder.children = []
-    folderMap.set(folder.id, folder)
-  })
-
-  const nestedFolders = []
-  folderMap.forEach(folder => {
-    if (folder.parent_id === null) {
-      nestedFolders.push(folder)
-    } else {
-      const parentFolder = folderMap.get(folder.parent_id)
-      if (parentFolder) {
-        parentFolder.children.push(folder)
-      }
-    }
-  })
-
-  return nestedFolders
-}
 
 const selectedFolderId = ref(0)
 const showModal = ref(false)
@@ -50,9 +37,9 @@ const newFolderName = ref('')
 
 const selectFolder = folder => {
   if (selectedFolderId.value === folder.id) {
-    folder.open = !folder.open // Toggle open state
+    folder.open = !folder.open
   } else {
-    folder.open = true // Ensure it's open when selected
+    folder.open = true
     selectedFolderId.value = folder.id
   }
 }
@@ -67,44 +54,57 @@ const openAddFolderModal = () => {
   newFolderName.value = ''
 }
 
-const createNewFolder = name => {
+const createNewFolder = async name => {
   if (selectedFolderId.value === null || !name.trim()) return
 
-  const findFolderById = (folders, id) => {
-    for (const folder of folders) {
-      if (folder.id === id) return folder
-      if (folder.children) {
-        const result = findFolderById(folder.children, id)
-        if (result) return result
+  try {
+    const response = await fetch(
+      'https://fms-backend-neon.vercel.app/api/folders',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          parent_id: selectedFolderId.value,
+        }),
+      },
+    )
+
+    if (!response.ok) {
+      throw new Error('Error creating folder')
+    }
+
+    const newFolder = await response.json()
+
+    // Find the selected folder to add the new folder as a child
+    const findFolderById = (folders, id) => {
+      for (const folder of folders) {
+        if (folder.id === id) return folder
+        if (folder.children) {
+          const result = findFolderById(folder.children, id)
+          if (result) return result
+        }
       }
     }
-  }
 
-  const selectedFolder = findFolderById(folders.value, selectedFolderId.value)
+    const selectedFolder = findFolderById(folders.value, selectedFolderId.value)
 
-  if (selectedFolder && selectedFolder.type === 'folder') {
-    const newFolderId = Date.now()
-    const currentDate = new Date().toISOString().split('T')[0]
-    const newFolder = {
-      id: newFolderId,
-      name: name,
-      type: 'folder',
-      dateCreated: currentDate,
-      lastModified: currentDate,
-      parentId: selectedFolder.id,
-      open: false,
-      children: [],
+    if (selectedFolder) {
+      newFolder.children = []
+      newFolder.files = []
+      selectedFolder.children.push(newFolder)
+      selectedFolder.lastModified = new Date().toISOString()
     }
 
-    selectedFolder.children.push(newFolder)
-    selectedFolder.lastModified = currentDate
-
     showModal.value = false
+  } catch (error) {
+    console.error('Error creating new folder:', error)
   }
 }
 
 const selectedFolder = computed(() => {
-  // Function to find the selected folder
   const findFolderById = (folders, id) => {
     for (const folder of folders) {
       if (folder.id === id) return folder
@@ -127,7 +127,10 @@ const closeModal = () => {
   <div class="flex flex-col">
     <NavigationBar />
     <div class="border border-gray-200 rounded-md mx-10 my-8">
-      <FormatBar :addNewFolder="openAddFolderModal" />
+      <FormatBar
+        :addNewFolder="openAddFolderModal"
+        :selectedFolderId="selectedFolderId"
+      />
       <SearchBar />
       <div class="flex border-t border-gray-200 min-h-screen w-full">
         <div class="w-1/3">
