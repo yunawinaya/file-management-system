@@ -21,7 +21,7 @@ const isActiveLink = routePath => {
             >
           </a>
           <div class="md:ml-auto">
-            <div class="flex space-x-2">
+            <!-- <div class="flex space-x-2">
               <a
                 href="jobs.html"
                 class="bg-transparent border border-white text-white hover:bg-gray-900 hover:text-white rounded-md px-3 py-2"
@@ -32,7 +32,7 @@ const isActiveLink = routePath => {
                 class="bg-gray-500 text-white hover:bg-gray-700 rounded-md px-3 py-2"
                 >Sign up</a
               >
-            </div>
+            </div> -->
           </div>
         </div>
       </div>
