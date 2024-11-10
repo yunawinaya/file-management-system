@@ -186,10 +186,10 @@ const navigateToFolder = folder => {
       />
     </div>
 
-    <table class="w-full table-auto border-collapse">
+    <table class="w-full table-auto border-collapse" v-resizable>
       <thead>
         <tr class="bg-gray-100">
-          <th class="p-2 text-left w-5">
+          <th class="p-2 text-left w-5 relative">
             <input
               type="checkbox"
               :checked="areAllSelected"
